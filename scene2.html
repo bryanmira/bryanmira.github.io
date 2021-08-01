@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <script src="https://d3js.org/d3-queue.v3.min.js"></script>
+  <style>
+svg {
+    position: center;
+}
+.hidden {
+      display: none;
+}
+div.tooltip {
+      color: #222; 
+      background: #fff; 
+      border-radius: 3px; 
+      box-shadow: 0px 0px 2px 0px #a6a6a6; 
+      padding: .2em; 
+      text-shadow: #f5f5f5 0 1px 0;
+      opacity: 0.9; 
+      position: absolute;
+  </style>
+</head>
+
+
+<body>
+  <h1>Philippines Olympic Performance<h1>
+    <div >
+      <h6>Aside from the Philippines, there are still many countries that have not won a gold medal in the Olympics games. The countries in white are countries that have not won a gold medal. The map view helps in realizing if there is a connection with geography and earning a gold medal.</h6>
+    </div>
+    <div style="width:100%; display: flex;
+  align-items: center;
+  justify-content: center;">
+    <input type="button" onclick="location.href='index.html';" value="Previous" />
+    <input type="button" onclick="location.href='scene3.html';" value="Next" />
+  </div>
+  <div style="text-align: center;">
+    <svg width="940" height="500"></svg>
+  </div>
+<div class="tooltip"></div>
+<script>
+var margin = {top: 10, right: 10, bottom: 10, left: 10};
+var width = 960 - margin.left - margin.right;
+var height = 500 - margin.top - margin.bottom;
+var projection = d3.geoNaturalEarth1()
+                   .center([0, 15]) 
+                   .rotate([-9,0])
+                   .scale([1300/(2*Math.PI)]) 
+                   .translate([450,300]);
+var path = d3.geoPath()
+             .projection(projection);
+var svg = d3.select("svg")
+            .append("g")
+            .attr("width", width)
+            .attr("height", height);
+var tooltip = d3.select("div.tooltip");
+d3.queue()
+  .defer(d3.json, "world-110m.json")
+  .defer(d3.csv, "world-country-names.csv")
+  .defer(d3.csv, "athlete_events.csv")
+  .await(ready);
+function ready(error, world, names,olympic) {
+  if (error) throw error;
+  var countriesOlympic = [];
+  for (var i = 0; i < olympic.length; i++) {
+    if (!countriesOlympic.includes(olympic[i].NOC))
+      countriesOlympic.push(olympic[i].NOC)
+  }
+  var countriesGold = olympic.filter(function (el) {
+    return el.Medal === 'Gold'});
+  var countriesGold2 = countriesGold.map(function(item) {
+    return item['NOC'];
+  });
+  var countriesGoldName = countriesGold.map(function(item) {
+    return item['Team'];
+  });
+  var countriesNoGold = [];
+  countriesOlympic.forEach(element => {
+    if(!countriesGold2.includes(element))
+        countriesNoGold.push(element)
+      });
+
+  var uniqueNoGold = [...new Set(countriesNoGold)];
+  var uniqueGold = [...new Set(countriesGold2)];
+  var uniqueGoldName = [...new Set(countriesGoldName)];
+  var countries1 = topojson.feature(world, world.objects.countries).features;
+  countries = countries1.filter(function(d) {
+    return names.some(function(n) {
+      if (d.id == n.id && uniqueNoGold.includes(n['alpha-3'])) return d.name = n.name;
+  })});
+
+  var allCountries = countries1.filter(function(d) {
+    return names.some(function(n) {
+      if (d.id == n.id) return d.name = n.name;
+  })});
+
+  var allCountries = countries1.filter(function(d) {
+    return names.some(function(n) {
+      if (d.id == n.id) return d.noc = n['alpha-3'];
+  })});
+
+
+  
+  svg.selectAll("path")
+      .data(allCountries)
+      .enter()
+      .append("path")
+      .attr("stroke","black")
+      .attr("stroke-width",1)
+      .attr("fill", function(d) {
+        if(d.noc === 'PHL') return 'red';
+        else if(uniqueGold.includes(d.noc) || uniqueGoldName.includes(d.name) )
+          return 'gold';
+
+        else return 'white'
+        })
+      .attr("d", path )
+      .on("mouseover",function(d,i){
+                d3.select(this).attr("fill","grey").attr("stroke-width",2);
+                return tooltip.style("hidden", false).html(d.name);
+            })
+            .on("mousemove",function(d){
+                tooltip.classed("hidden", false)
+                       .style("top", (d3.event.pageY) + "px")
+                       .style("left", (d3.event.pageX + 10) + "px")
+                       .html(d.name);
+            })
+            .on("mouseout",function(d,i){
+                d3.select(this).attr("fill", function(d) {
+                  if(d.noc === 'PHL') return 'red';
+        else if(uniqueGold.includes(d.noc) || uniqueGoldName.includes(d.name) )
+          return 'gold';
+
+        else return 'white'
+    }).attr("stroke-width",1);
+                tooltip.classed("hidden", true);
+            });
+};
+
+</script>
+</body>

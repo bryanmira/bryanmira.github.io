@@ -1,153 +1,288 @@
 <html>
- <head>
- 	<script src="https://d3js.org/d3.v7.min.js" ></script>
- 	<style>
- 	#chart {
-  text-align: center;
-  margin-top: 40px;
-}
- </style>
- </head>
- <body>
-   <h1>Hello World<h1>
-   	<button>Update Chart</button>
-<div id="chart"></div>
-   	<script type="text/javascript">
-        var data = [
-  {
-    year: 2000,
-    popularity: 50
-  },
-  {
-    year: 2001,
-    popularity: 150
-  },
-  {
-    year: 2002,
-    popularity: 200
-  },
-  {
-    year: 2003,
-    popularity: 130
-  },
-  {
-    year: 2004,
-    popularity: 240
-  },
-  {
-    year: 2005,
-    popularity: 380
-  },
-  {
-    year: 2006,
-    popularity: 420
-  }
-];
+<head>
+	<script src="https://d3js.org/d3.v7.min.js" ></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.5.1/d3-annotation.js" ></script>
+	<style>
+	#chart {
+		text-align: center;
+		margin-top: 40px;
+	}
+	.annotation-note-label {
+		font-size:12px;
+		font-weight:normal;
+	}
+	.annotation-note-title {
+		font-size:16px;
 
-d3.csv('athlete_events.csv')
-  .then(function(data) {
-      console.log(data);
-  })
-  .catch(function(error){
+	}
+	.xlabel{
+    font-size: 12px;
+  }
+  .ylabel{
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+	<h1>Philippines Olympic Performance<h1>
+		<div>
+			<h6>The Philippines recently won a gold medal in Tokyo 2020 Summer Olympics courstesy of Hidilyn Diaz in weightlifting. It is the country's first gold medal in almost a century of participating in the games. Winning the medal has brought so much hope and pride to the people of the Philippines.</h6>
+		</div>
+		<div style="width:100%; display: flex;
+  align-items: center;
+  justify-content: center;">
+		<input type="button" onclick="location.href='scene2.html';" value="Next"  style="margin:0 auto; "/>
+		</div>
+		<div id="chart"></div>
+		<script type="text/javascript">
+
+
+			d3.csv('athlete_events.csv')
+			.then(function(data) {
+				console.log(data);
+				let newData = [];
+				let bronzeData = [];
+				var years = [];
+				for (var i = 0; i < data.length; i++) {
+					if (!years.includes(data[i].Year))
+						years.push(data[i].Year)
+				}
+
+
+				years.forEach(element => {
+					newData.push({'year': element, 'goldCount': data.filter((obj) => obj.Year === element && obj.Team === 'Philippines' && obj.Medal === 'Silver').length})
+					bronzeData.push({'year': element, 'goldCount': data.filter((obj) => obj.Year === element && obj.Team === 'Philippines' && obj.Medal === 'Bronze').length})
+				});
+				newData = newData.sort((a, b) => a.year.localeCompare(b.year));
+				bronzeData = bronzeData.sort((a, b) => a.year.localeCompare(b.year));
+				updateChart(newData,bronzeData);
+			})
+			.catch(function(error){
      // handle error   
-  })
+ })
 
 // Create SVG and padding for the chart
 const svg = d3
-  .select("#chart")
-  .append("svg")
-  .attr("height", 300)
-  .attr("width", 600);
+.select("#chart")
+.append("svg")
+.attr("height", 500)
+.attr("width", 1000);
 const margin = { top: 0, bottom: 20, left: 30, right: 20 };
 const chart = svg.append("g").attr("transform", `translate(${margin.left},0)`);
 const width = +svg.attr("width") - margin.left - margin.right;
 const height = +svg.attr("height") - margin.top - margin.bottom;
 const grp = chart
-  .append("g")
-  .attr("transform", `translate(-${margin.left},-${margin.top})`);
+.append("g")
+.attr("transform", `translate(-${margin.left},-${margin.top})`);
 
 // Add empty scales group for the scales to be attatched to on update 
 chart.append("g").attr("class", "x-axis");
 chart.append("g").attr("class", "y-axis");
 
+svg.append("text")
+.attr("class", "xlabel")
+.attr("text-anchor", "end")
+.attr("x", width/2)
+.attr("y", height)
+.text("Years");
+svg.append("text").attr("class", "ylabel")
+.attr("text-anchor", "end")
+.attr("y", 0)
+.attr("x", -height/2)
+.attr("dy", ".75em")
+.attr("transform", "rotate(-90)")
+.text("Medal Count");
+
+svg.append("circle").attr("cx",800).attr("cy",100).attr("r", 6).attr("fill", "gold")
+svg.append("circle").attr("cx",800).attr("cy",130).attr("r", 6).attr("fill", "silver")
+svg.append("circle").attr("cx",800).attr("cy",160).attr("r", 6).attr("fill", "brown")
+svg.append("text").attr("x", 820).attr("y", 100).text("Gold").style("font-size", "12px").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 820).attr("y", 130).text("Silver").style("font-size", "12px").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 820).attr("y", 160).text("Bronze").style("font-size", "12px").attr("alignment-baseline","middle")
+
 // Add empty path
 const path = grp
-  .append("path")
-  .attr("transform", `translate(${margin.left},0)`)
-  .attr("fill", "none")
-  .attr("stroke", "steelblue")
-  .attr("stroke-linejoin", "round")
-  .attr("stroke-linecap", "round")
-  .attr("stroke-width", 1.5);
+.append("path")
+.attr("id", "line1")
+.attr("transform", `translate(${margin.left},0)`)
+.attr("fill", "none")
+.attr("stroke", "silver")
+.attr("stroke-linejoin", "round")
+.attr("stroke-linecap", "round")
+.attr("stroke-width", 1.5);
+
+const path2 = grp
+.append("path")
+.attr("id", "line2")
+.attr("transform", `translate(${margin.left},0)`)
+.attr("fill", "none")
+.attr("stroke", "brown")
+.attr("stroke-linejoin", "round")
+.attr("stroke-linecap", "round")
+.attr("stroke-width", 1.5);
 
 function updateScales(data) {
-  // Create scales
   const yScale = d3
-    .scaleLinear()
-    .range([height, 0])
-    .domain([0, d3.max(data, dataPoint => dataPoint.popularity)]);
+  .scaleLinear()
+  .range([height, 0])
+  .domain([0, 4]);
   const xScale = d3
-    .scaleLinear()
-    .range([0, width])
-    .domain(d3.extent(data, dataPoint => dataPoint.year));
+  .scaleLinear()
+  .range([0, width])
+  .domain(d3.extent(data, dataPoint => dataPoint.year));
   return { yScale, xScale };
 }
 
+function updateScales2(data) {
+  const yScale2 = d3
+  .scaleLinear()
+  .range([height, 0])
+  .domain([0, 4]);
+  const xScale2 = d3
+  .scaleLinear()
+  .range([0, width])
+  .domain(d3.extent(data, dataPoint => dataPoint.year));
+  return { yScale2, xScale2 };
+}
+
 function createLine(xScale, yScale) {
-  return line = d3
-  .line()
-  .x(dataPoint => xScale(dataPoint.year))
-  .y(dataPoint => yScale(dataPoint.popularity));
+	return line = d3
+	.line()
+	.x(dataPoint => xScale(dataPoint.year))
+	.y(dataPoint => yScale(dataPoint.goldCount));
 }
 
 function updateAxes(data, chart, xScale, yScale) {
-  chart
-    .select(".x-axis")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(xScale).ticks(data.length));
-  chart
-    .select(".y-axis")
-    .attr("transform", `translate(0, 0)`)
-    .call(d3.axisLeft(yScale));
+	chart
+	.select(".x-axis")
+	.attr("transform", `translate(0,${height})`)
+	.call(d3.axisBottom(xScale).ticks(data.length).tickFormat(d3.format("d")));
+	chart
+	.select(".y-axis")
+	.attr("transform", `translate(10, 10)`)
+	.call(d3.axisLeft(yScale).ticks(5));
 }
 
 function updatePath(data, line) {
-  const updatedPath = d3
-    .select("path")
-    .interrupt()
-    .datum(data)
-    .attr("d", line);
+	const updatedPath = d3
+	.select("#line1")
+	.interrupt()
+	.datum(data)
+	.attr("d", line);
 
-  const pathLength = updatedPath.node().getTotalLength();
-  // D3 provides lots of transition options, have a play around here:
-  // https://github.com/d3/d3-transition
+	const pathLength = updatedPath.node().getTotalLength();
   const transitionPath = d3
-    .transition()
-    .ease(d3.easeSin)
-    .duration(2500);
+  .transition()
+  .ease(d3.easeSin)
+  .duration(2500);
   updatedPath
-    .attr("stroke-dashoffset", pathLength)
-    .attr("stroke-dasharray", pathLength)
-    .transition(transitionPath)
-    .attr("stroke-dashoffset", 0);
+  .attr("stroke-dashoffset", pathLength)
+  .attr("stroke-dasharray", pathLength)
+  .transition(transitionPath)
+  .attr("stroke-dashoffset", 0);
 }
 
-function updateChart(data) {
-    const { yScale, xScale } = updateScales(data);
-    const line = createLine(xScale, yScale);
-    updateAxes(data, chart, xScale, yScale);
-    updatePath(data, line);
+function updatePath2(data, line) {
+	const updatedPath2 = d3
+	.select("#line2")
+	.interrupt()
+	.datum(data)
+	.attr("d", line);
+
+	const pathLength = updatedPath2.node().getTotalLength();
+  const transitionPath = d3
+  .transition()
+  .ease(d3.easeSin)
+  .duration(2500);
+  updatedPath2
+  .attr("stroke-dashoffset", pathLength)
+  .attr("stroke-dasharray", pathLength)
+  .transition(transitionPath)
+  .attr("stroke-dashoffset", 0);
 }
 
-updateChart(data);
-// Update chart when button is clicked
-d3.select("button").on("click", () => {
-  // Create new fake data
-  const newData = data.map(row => {
-    return { ...row, popularity: row.popularity * Math.random() };
-  });
-  updateChart(newData);
-});
-    </script>
- </body>
+
+function updateChart(data, bronzeData) {
+	const { yScale, xScale } = updateScales(data);
+	console.log(yScale);
+	const line = createLine(xScale, yScale);
+	updateAxes(data, chart, xScale, yScale);
+	updatePath(data, line);
+
+	const { yScale2, xScale2 } = updateScales2(bronzeData);
+	console.log(yScale2);
+	const line2 = createLine(xScale2, yScale2);
+	updateAxes(bronzeData, chart, xScale2, yScale2);
+	updatePath2(bronzeData, line2);
+
+}
+
+const annotations = [
+{
+	note: {
+		label: "Hidilyn Diaz wins silver for weightlifiting (2016 Rio Olympics)",
+		title: "Last olympic medal",
+		align: "left"
+	},
+	type: d3.annotationCalloutCircle,
+	subject: {
+      radius: 10,         // circle radius
+      radiusPadding: 20   // white space around circle befor connector
+  },
+  color: ["red"],
+  x: 975,
+  y: 355,
+  dy: -100,
+  dx: -300
+},
+
+{
+	note: {
+		label: "Started joining the Summer Olympics (1924 Paris)",
+		title: "First Year",
+		align: "left"
+	},
+	type: d3.annotationCalloutCircle,
+	subject: {
+      radius: 10,         // circle radius
+      radiusPadding: 20   // white space around circle befor connector
+  },
+  color: ["red"],
+  x: 250,
+  y: 475,
+  dy: -100,
+  dx: -100
+},
+
+{
+	note: {
+		label: "Anthony Villanueva won the first silver medal for the country (1964 Tokyo)",
+		title: "First Silver Medal",
+		align: "left"
+	},
+	type: d3.annotationCalloutCircle,
+	subject: {
+      radius: 10,         // circle radius
+      radiusPadding: 20   // white space around circle befor connector
+  },
+  color: ["red"],
+  x: 567,
+  y: 355,
+  dy: -100,
+  dx: -100
+}
+]
+
+// Add annotation to the chart
+const makeAnnotations = d3.annotation()
+.annotations(annotations)
+d3.select("svg")
+.append("g")
+.call(makeAnnotations)
+
+
+
+</script>
+</body>
 </html>
